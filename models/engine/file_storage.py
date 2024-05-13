@@ -1,50 +1,56 @@
 #!/usr/bin/python3
-"""This module defines a class to manage file storage for hbnb clone"""
+"""File Storage for AirBnB Clone"""
 import json
+from os.path import exists
 
 
 class FileStorage:
-    """This class manages storage of hbnb models in JSON format"""
-    __file_path = 'file.json'
-    __objects = {}
+    """Class for FileStorage"""
+
+    __file_path = "file.json"
+    __objects = dict()
 
     def all(self):
-        """Returns a dictionary of models currently in storage"""
-        return FileStorage.__objects
+        """return the dictionary __objects"""
+        return self.__objects
 
     def new(self, obj):
-        """Adds new object to storage dictionary"""
-        self.all().update({obj.to_dict()['__class__'] + '.' + obj.id: obj})
+        """sets obj in __objects with key <obj class name>.id"""
+        self.__objects[obj.__class__.__name__ + '.' + obj.id] = obj
 
     def save(self):
-        """Saves storage dictionary to file"""
-        with open(FileStorage.__file_path, 'w') as f:
-            temp = {}
-            temp.update(FileStorage.__objects)
-            for key, val in temp.items():
-                temp[key] = val.to_dict()
-            json.dump(temp, f)
+        """serialize __objects to JSON file"""
+        temp = dict()
+        for keys in self.__objects.keys():
+            temp[keys] = self.__objects[keys].to_dict()
+        with open(self.__file_path, mode='w') as jsonfile:
+            json.dump(temp, jsonfile)
 
     def reload(self):
-        """Loads storage dictionary from file"""
-        from models.base_model import BaseModel
-        from models.user import User
-        from models.place import Place
-        from models.state import State
-        from models.city import City
-        from models.amenity import Amenity
-        from models.review import Review
+        """deserializes the JSON file to __objects"""
+        from ..base_model import BaseModel
+        from ..user import User
+        from ..state import State
+        from ..city import City
+        from ..amenity import Amenity
+        from ..place import Place
+        from ..review import Review
 
-        classes = {
-                    'BaseModel': BaseModel, 'User': User, 'Place': Place,
-                    'State': State, 'City': City, 'Amenity': Amenity,
-                    'Review': Review
-                  }
-        try:
-            temp = {}
-            with open(FileStorage.__file_path, 'r') as f:
-                temp = json.load(f)
-                for key, val in temp.items():
-                        self.all()[key] = classes[val['__class__']](**val)
-        except FileNotFoundError:
-            pass
+        if exists(self.__file_path):
+            with open(self.__file_path) as jsonfile:
+                decereal = json.load(jsonfile)
+            for keys in decereal.keys():
+                if decereal[keys]['__class__'] == "BaseModel":
+                    self.__objects[keys] = BaseModel(**decereal[keys])
+                elif decereal[keys]['__class__'] == "User":
+                    self.__objects[keys] = User(**decereal[keys])
+                elif decereal[keys]['__class__'] == "State":
+                    self.__objects[keys] = State(**decereal[keys])
+                elif decereal[keys]['__class__'] == "City":
+                    self.__objects[keys] = City(**decereal[keys])
+                elif decereal[keys]['__class__'] == "Amenity":
+                    self.__objects[keys] = Amenity(**decereal[keys])
+                elif decereal[keys]['__class__'] == "Place":
+                    self.__objects[keys] = Place(**decereal[keys])
+                elif decereal[keys]['__class__'] == "Review":
+                    self.__objects[keys] = Review(**decereal[keys])
